@@ -1,0 +1,16 @@
+{
+  "name": "ordinis",
+  "private": true,
+  "version": "0.0.1",
+  "scripts": {
+    "dev:api": "npm run start:dev --workspace api",
+    "build:api": "npm run build --workspace api",
+    "dev:web": "npm run dev --workspace web",
+    "build:web": "npm run build --workspace web",
+    "db:up": "docker compose up -d postgres"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}
