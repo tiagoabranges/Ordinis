@@ -17,10 +17,15 @@ export type AccountOption = {
 
 export type CategoryOption = {
   id: string;
+  userId?: string | null;
   name: string;
   type?: string;
   color?: string | null;
   icon?: string | null;
+  slug?: string;
+  isDefault?: boolean;
+  isSystem?: boolean;
+  keywords?: string[];
 };
 
 export type FinancialGridSummary = {
@@ -131,3 +136,14 @@ export type CreateTransactionPayload = {
 };
 
 export type UpdateTransactionPayload = Partial<CreateTransactionPayload>;
+
+export type CategoryType = "INCOME" | "EXPENSE" | "BOTH";
+
+export type CategoryPayload = {
+  name: string;
+  slug: string;
+  type: CategoryType;
+  color?: string;
+  icon?: string;
+  keywords?: string[];
+};

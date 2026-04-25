@@ -1,8 +1,1 @@
-import { FinancialGridPage } from "./modules/financial-grid/components/FinancialGridPage";
-import "./App.css";
-
-function App() {
-  return <FinancialGridPage />;
-}
-
-export default App;
+export { App as default } from "./app/App";

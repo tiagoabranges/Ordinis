@@ -5,7 +5,6 @@ import {
   fetchAccounts,
   fetchCategories,
   fetchFinancialGrid,
-  login,
   markTransactionPaid,
   updateTransaction,
 } from "../services/financialGridService";
@@ -15,12 +14,9 @@ import type {
   CreateTransactionPayload,
   FinancialGridFilters,
   FinancialGridResponse,
-  LoginResponse,
   UpdateTransactionPayload,
 } from "../types/financialGrid.types";
-
-const tokenStorageKey = "ordinis.accessToken";
-const userStorageKey = "ordinis.user";
+import { tokenStorageKey } from "./useSession";
 
 function toDateInput(date: Date) {
   return date.toISOString().slice(0, 10);
@@ -45,13 +41,7 @@ function getInitialFilters(): FinancialGridFilters {
 }
 
 export function useFinancialGrid() {
-  const [token, setToken] = useState(
-    () => localStorage.getItem(tokenStorageKey) ?? "",
-  );
-  const [user, setUser] = useState<LoginResponse["user"] | null>(() => {
-    const stored = localStorage.getItem(userStorageKey);
-    return stored ? JSON.parse(stored) : null;
-  });
+  const [token] = useState(() => localStorage.getItem(tokenStorageKey) ?? "");
   const [filters, setFilters] = useState(getInitialFilters);
   const [data, setData] = useState<FinancialGridResponse | null>(null);
   const [accounts, setAccounts] = useState<AccountOption[]>([]);
@@ -59,8 +49,6 @@ export function useFinancialGrid() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-
-  const isAuthenticated = Boolean(token);
 
   const updateFilters = useCallback((patch: Partial<FinancialGridFilters>) => {
     setFilters((current) => ({
@@ -97,35 +85,6 @@ export function useFinancialGrid() {
       setLoading(false);
     }
   }, [filters, token]);
-
-  const signIn = useCallback(async (email: string, password: string) => {
-    setLoading(true);
-    setError("");
-
-    try {
-      const session = await login(email, password);
-      localStorage.setItem(tokenStorageKey, session.accessToken);
-      localStorage.setItem(userStorageKey, JSON.stringify(session.user));
-      setToken(session.accessToken);
-      setUser(session.user);
-    } catch (requestError) {
-      const message =
-        requestError instanceof Error
-          ? requestError.message
-          : "Falha no login.";
-      setError(message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const signOut = useCallback(() => {
-    localStorage.removeItem(tokenStorageKey);
-    localStorage.removeItem(userStorageKey);
-    setToken("");
-    setUser(null);
-    setData(null);
-  }, []);
 
   const saveTransaction = useCallback(
     async (payload: CreateTransactionPayload, transactionId?: string) => {
@@ -222,16 +181,12 @@ export function useFinancialGrid() {
       data,
       error,
       filters,
-      isAuthenticated,
       loading,
       saving,
-      user,
       cancel,
       load,
       markPaid,
       saveTransaction,
-      signIn,
-      signOut,
       updateFilters,
     }),
     [
@@ -240,16 +195,12 @@ export function useFinancialGrid() {
       data,
       error,
       filters,
-      isAuthenticated,
       loading,
       saving,
-      user,
       cancel,
       load,
       markPaid,
       saveTransaction,
-      signIn,
-      signOut,
       updateFilters,
     ],
   );

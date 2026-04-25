@@ -1,17 +1,22 @@
 import { useState } from "react";
+import { useOutletContext } from "react-router-dom";
 import { useFinancialGrid } from "../hooks/useFinancialGrid";
-import { useTheme } from "../hooks/useTheme";
+import type { ThemeMode } from "../hooks/useTheme";
 import { FinancialFilters } from "./FinancialFilters";
 import { FinancialSummaryCards } from "./FinancialSummaryCards";
 import { FinancialTransactionsTable } from "./FinancialTransactionsTable";
-import { LoginPanel } from "./LoginPanel";
 import { ThemeToggle } from "./ThemeToggle";
 import { TransactionFormModal } from "./TransactionFormModal";
 import type { FinancialGridItem } from "../types/financialGrid.types";
 
+type FinancialGridOutletContext = {
+  theme: ThemeMode;
+  toggleTheme: () => void;
+};
+
 export function FinancialGridPage() {
   const grid = useFinancialGrid();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme } = useOutletContext<FinancialGridOutletContext>();
   const [isModalOpen, setModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<FinancialGridItem | null>(
     null,
@@ -32,39 +37,15 @@ export function FinancialGridPage() {
     setModalOpen(false);
   }
 
-  if (!grid.isAuthenticated) {
-    return (
-      <main className="app-shell app-shell--auth">
-        <div className="auth-theme">
-          <ThemeToggle theme={theme} onToggle={toggleTheme} />
-        </div>
-        <LoginPanel
-          error={grid.error}
-          loading={grid.loading}
-          onSubmit={grid.signIn}
-        />
-      </main>
-    );
-  }
-
   return (
-    <main className="app-shell">
+    <>
       <header className="topbar">
-        <div className="brand-lockup">
-          <span className="brand-mark" aria-hidden="true">
-            <span />
-            <span />
-            <span />
-          </span>
-          <span className="eyebrow">Ordinis</span>
+        <div>
+          <span className="eyebrow">Planilha</span>
           <h1>Planilha financeira</h1>
         </div>
         <div className="topbar__actions">
-          <span>{grid.user?.fullName}</span>
           <ThemeToggle theme={theme} onToggle={toggleTheme} />
-          <button className="button button--ghost" onClick={grid.signOut}>
-            Sair
-          </button>
           <button className="button button--primary" onClick={openCreateModal}>
             Nova transacao
           </button>
@@ -109,6 +90,6 @@ export function FinancialGridPage() {
           }}
         />
       ) : null}
-    </main>
+    </>
   );
 }

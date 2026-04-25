@@ -1,3 +1,4 @@
+import type { FocusEvent, MouseEvent } from "react";
 import type {
   AccountOption,
   CategoryOption,
@@ -30,6 +31,16 @@ const statuses: Array<{ label: string; value: "" | TransactionStatus }> = [
   { label: "Cancelado", value: "CANCELED" },
 ];
 
+function openDatePicker(
+  event: FocusEvent<HTMLInputElement> | MouseEvent<HTMLInputElement>,
+) {
+  const input = event.currentTarget as HTMLInputElement & {
+    showPicker?: () => void;
+  };
+
+  input.showPicker?.();
+}
+
 export function FinancialFilters({
   accounts,
   categories,
@@ -42,8 +53,11 @@ export function FinancialFilters({
       <label className="field">
         <span>Inicio</span>
         <input
+          className="date-input"
           type="date"
           value={filters.startDate}
+          onFocus={openDatePicker}
+          onClick={(event) => openDatePicker(event)}
           onChange={(event) => onChange({ startDate: event.target.value })}
         />
       </label>
@@ -51,8 +65,11 @@ export function FinancialFilters({
       <label className="field">
         <span>Fim</span>
         <input
+          className="date-input"
           type="date"
           value={filters.endDate}
+          onFocus={openDatePicker}
+          onClick={(event) => openDatePicker(event)}
           onChange={(event) => onChange({ endDate: event.target.value })}
         />
       </label>

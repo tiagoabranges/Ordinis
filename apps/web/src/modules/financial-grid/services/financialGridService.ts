@@ -1,5 +1,6 @@
 import type {
   AccountOption,
+  CategoryPayload,
   CategoryOption,
   CreateTransactionPayload,
   FinancialGridFilters,
@@ -105,6 +106,33 @@ export async function markTransactionPaid(id: string, token: string) {
 export async function cancelTransaction(id: string, token: string) {
   return request(`/transactions/${id}/cancel`, {
     method: "PATCH",
+    headers: buildHeaders(token),
+  });
+}
+
+export async function createCategory(payload: CategoryPayload, token: string) {
+  return request<CategoryOption>("/categories", {
+    method: "POST",
+    headers: buildHeaders(token),
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateCategory(
+  id: string,
+  payload: Partial<CategoryPayload>,
+  token: string,
+) {
+  return request<CategoryOption>(`/categories/${id}`, {
+    method: "PATCH",
+    headers: buildHeaders(token),
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteCategory(id: string, token: string) {
+  return request<{ success: boolean }>(`/categories/${id}`, {
+    method: "DELETE",
     headers: buildHeaders(token),
   });
 }
