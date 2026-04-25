@@ -1,0 +1,318 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AccountType {
+  CHECKING
+  SAVINGS
+  CASH
+  WALLET
+  CREDIT_CARD
+  INVESTMENT
+}
+
+enum CategoryType {
+  INCOME
+  EXPENSE
+  BOTH
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+  TRANSFER
+}
+
+enum PaymentMethod {
+  PIX
+  CREDIT
+  DEBIT
+  BOLETO
+  CASH
+  TRANSFER
+  OTHER
+}
+
+enum TransactionStatus {
+  PENDING
+  PAID
+  OVERDUE
+  CANCELED
+}
+
+enum TransactionSource {
+  MANUAL
+  IMPORT
+  AUTOMATION
+  AI
+}
+
+enum RecurrenceFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum ImportJobStatus {
+  UPLOADED
+  PREVIEWED
+  CONFIRMED
+  FAILED
+}
+
+enum AutomationInboxStatus {
+  PENDING
+  PARSED
+  CONFIRMED
+  REJECTED
+  PROCESSED
+}
+
+enum AutomationSource {
+  MOBILE
+  WEB
+  API
+  IMPORT
+}
+
+enum AttachmentStorage {
+  LOCAL
+  S3
+}
+
+model User {
+  id               String                 @id @default(cuid())
+  email            String                 @unique
+  passwordHash     String
+  fullName         String
+  refreshTokenHash String?
+  isActive         Boolean                @default(true)
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+  accounts         Account[]
+  attachments      Attachment[]
+  automationInbox  AutomationInbox[]
+  categories       Category[]
+  costCenters      CostCenter[]
+  importJobs       ImportJob[]
+  installmentGroups InstallmentGroup[]
+  recurringSeries  RecurringTransaction[]
+  transactions     Transaction[]
+}
+
+model Account {
+  id                   String        @id @default(cuid())
+  userId               String
+  name                 String
+  type                 AccountType
+  institution          String?
+  description          String?
+  currency             String        @default("BRL")
+  initialBalance       Decimal       @db.Decimal(14, 2)
+  creditLimit          Decimal?      @db.Decimal(14, 2)
+  closingDay           Int?
+  dueDay               Int?
+  isArchived           Boolean       @default(false)
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  user                 User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions         Transaction[] @relation("transactionAccount")
+  incomingTransfers    Transaction[] @relation("transactionDestinationAccount")
+  recurringSeries      RecurringTransaction[]
+  importJobs           ImportJob[]
+
+  @@index([userId, type])
+  @@unique([userId, name])
+}
+
+model Category {
+  id             String         @id @default(cuid())
+  userId         String?
+  name           String
+  slug           String
+  type           CategoryType
+  color          String?
+  icon           String?
+  isDefault      Boolean        @default(false)
+  isSystem       Boolean        @default(false)
+  keywords       String[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  user           User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions   Transaction[]
+  recurringSeries RecurringTransaction[]
+
+  @@index([userId, type])
+  @@unique([userId, slug])
+}
+
+model CostCenter {
+  id              String                 @id @default(cuid())
+  userId          String?
+  name            String
+  code            String
+  description     String?
+  color           String?
+  isDefault       Boolean                @default(false)
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+  user            User?                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions    Transaction[]
+  recurringSeries RecurringTransaction[]
+
+  @@unique([userId, code])
+  @@index([userId, name])
+}
+
+model InstallmentGroup {
+  id                String        @id @default(cuid())
+  userId            String
+  title             String
+  description       String?
+  totalAmount       Decimal       @db.Decimal(14, 2)
+  totalInstallments Int
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions      Transaction[]
+
+  @@index([userId, createdAt])
+}
+
+model RecurringTransaction {
+  id                String              @id @default(cuid())
+  userId            String
+  accountId         String
+  categoryId        String?
+  costCenterId      String?
+  type              TransactionType
+  paymentMethod     PaymentMethod
+  title             String
+  description       String?
+  amount            Decimal             @db.Decimal(14, 2)
+  frequency         RecurrenceFrequency
+  interval          Int                 @default(1)
+  startDate         DateTime
+  endDate           DateTime?
+  nextOccurrence    DateTime
+  lastGeneratedAt   DateTime?
+  isActive          Boolean             @default(true)
+  notes             String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account           Account             @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  category          Category?           @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  costCenter        CostCenter?         @relation(fields: [costCenterId], references: [id], onDelete: SetNull)
+  generatedTransactions Transaction[]
+
+  @@index([userId, isActive, nextOccurrence])
+}
+
+model Transaction {
+  id                 String               @id @default(cuid())
+  userId             String
+  accountId          String
+  destinationAccountId String?
+  categoryId         String?
+  costCenterId       String?
+  type               TransactionType
+  paymentMethod      PaymentMethod
+  title              String
+  description        String?
+  amount             Decimal              @db.Decimal(14, 2)
+  transactionDate    DateTime
+  dueDate            DateTime?
+  status             TransactionStatus
+  installmentGroupId String?
+  installmentNumber  Int?
+  totalInstallments  Int?
+  recurringSeriesId  String?
+  source             TransactionSource    @default(MANUAL)
+  rawInput           Json?
+  notes              String?
+  transferGroupId    String?
+  externalHash       String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  user               User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account            Account              @relation("transactionAccount", fields: [accountId], references: [id], onDelete: Restrict)
+  destinationAccount Account?             @relation("transactionDestinationAccount", fields: [destinationAccountId], references: [id], onDelete: SetNull)
+  category           Category?            @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  costCenter         CostCenter?          @relation(fields: [costCenterId], references: [id], onDelete: SetNull)
+  installmentGroup   InstallmentGroup?    @relation(fields: [installmentGroupId], references: [id], onDelete: SetNull)
+  recurringSeries    RecurringTransaction? @relation(fields: [recurringSeriesId], references: [id], onDelete: SetNull)
+  attachments        Attachment[]
+
+  @@index([userId, transactionDate])
+  @@index([userId, status, dueDate])
+  @@index([userId, type, transactionDate])
+  @@index([accountId, transactionDate])
+  @@unique([userId, externalHash])
+}
+
+model Attachment {
+  id             String            @id @default(cuid())
+  userId         String
+  transactionId  String
+  originalName   String
+  storedName     String
+  storage        AttachmentStorage @default(LOCAL)
+  storagePath    String
+  mimeType       String
+  size           Int
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transaction    Transaction       @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  @@index([transactionId, createdAt])
+}
+
+model ImportJob {
+  id              String          @id @default(cuid())
+  userId          String
+  accountId       String?
+  filename        String
+  status          ImportJobStatus @default(UPLOADED)
+  columnMapping   Json?
+  previewRows     Json?
+  totalRows       Int             @default(0)
+  importedRows    Int             @default(0)
+  duplicateRows   Int             @default(0)
+  failedRows      Int             @default(0)
+  errorSummary    String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  confirmedAt     DateTime?
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account         Account?        @relation(fields: [accountId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+}
+
+model AutomationInbox {
+  id              String                @id @default(cuid())
+  userId          String?
+  rawText         String
+  parsedData      Json?
+  confidenceScore Decimal?              @db.Decimal(5, 4)
+  source          AutomationSource
+  status          AutomationInboxStatus @default(PENDING)
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  processedAt     DateTime?
+  user            User?                 @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+}
