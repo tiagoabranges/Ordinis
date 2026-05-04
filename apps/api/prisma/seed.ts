@@ -27,11 +27,13 @@ async function main() {
     where: { email: userEmail },
     update: {
       fullName: 'Usuário Demo Ordinis',
+      birthDate: dayjs('1990-01-01').toDate(),
       passwordHash,
     },
     create: {
       email: userEmail,
       fullName: 'Usuário Demo Ordinis',
+      birthDate: dayjs('1990-01-01').toDate(),
       passwordHash,
     },
   });

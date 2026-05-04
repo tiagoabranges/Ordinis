@@ -118,6 +118,23 @@ export type LoginResponse = {
     id: string;
     email: string;
     fullName: string;
+    birthDate?: string;
+  };
+};
+
+export type RegisterPayload = {
+  fullName: string;
+  birthDate: string;
+  email: string;
+  password: string;
+};
+
+export type RegisterResponse = {
+  success: boolean;
+  message: string;
+  user: {
+    email: string;
+    fullName: string;
   };
 };
 

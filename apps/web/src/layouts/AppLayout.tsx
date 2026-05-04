@@ -26,11 +26,15 @@ export function AppLayout() {
         <div className="auth-theme">
           <ThemeToggle theme={theme} onToggle={toggleTheme} />
         </div>
-        <LoginPanel
-          error={session.error}
-          loading={session.loading}
-          onSubmit={session.signIn}
-        />
+        <section className="auth-stage">
+          <LoginPanel
+            error={session.error}
+            loading={session.loading}
+            onRegister={session.signUp}
+            onSubmit={session.signIn}
+            success={session.success}
+          />
+        </section>
       </main>
     );
   }

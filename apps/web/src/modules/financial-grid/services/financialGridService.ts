@@ -6,6 +6,8 @@ import type {
   FinancialGridFilters,
   FinancialGridResponse,
   LoginResponse,
+  RegisterPayload,
+  RegisterResponse,
   UpdateTransactionPayload,
 } from "../types/financialGrid.types";
 
@@ -40,6 +42,13 @@ export async function login(email: string, password: string) {
   return request<LoginResponse>("/auth/login", {
     method: "POST",
     body: JSON.stringify({ email, password }),
+  });
+}
+
+export async function register(payload: RegisterPayload) {
+  return request<RegisterResponse>("/auth/register", {
+    method: "POST",
+    body: JSON.stringify(payload),
   });
 }
 

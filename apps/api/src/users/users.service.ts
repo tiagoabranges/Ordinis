@@ -12,6 +12,7 @@ export class UsersService {
         id: true,
         email: true,
         fullName: true,
+        birthDate: true,
         isActive: true,
         createdAt: true,
       },

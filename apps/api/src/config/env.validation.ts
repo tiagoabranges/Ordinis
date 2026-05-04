@@ -23,5 +23,7 @@ export function validateEnv(config: Env) {
     ),
     JWT_REFRESH_TTL: config.JWT_REFRESH_TTL ?? '30d',
     UPLOAD_DIR: config.UPLOAD_DIR ?? './storage',
+    EMAIL_FROM: config.EMAIL_FROM ?? 'Ordinis <noreply@ordinis.app>',
+    RESEND_API_KEY: config.RESEND_API_KEY,
   };
 }

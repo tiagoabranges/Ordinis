@@ -6,6 +6,8 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { compare, hash } from 'bcryptjs';
+import { toDate } from '../common/utils/date.util';
+import { EmailService } from '../email/email.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
@@ -19,6 +21,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly usersService: UsersService,
+    private readonly emailService: EmailService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -34,11 +37,24 @@ export class AuthService {
       data: {
         email: dto.email.toLowerCase(),
         fullName: dto.fullName,
+        birthDate: toDate(dto.birthDate)!,
         passwordHash: await hash(dto.password, 12),
       },
     });
 
-    return this.issueSession(user.id, user.email);
+    await this.emailService.sendWelcomeEmail({
+      email: user.email,
+      fullName: user.fullName,
+    });
+
+    return {
+      success: true,
+      message: 'Conta criada com sucesso. Agora entre com seu e-mail e senha.',
+      user: {
+        email: user.email,
+        fullName: user.fullName,
+      },
+    };
   }
 
   async login(dto: LoginDto) {

@@ -11,9 +11,14 @@ export class DashboardService {
   async getOverview(userId: string, query: DashboardQueryDto) {
     const baseDate = dayjs()
       .year(query.year ?? dayjs().year())
-      .month((query.month ?? dayjs().month() + 1) - 1);
-    const startOfMonth = baseDate.startOf('month').toDate();
-    const endOfMonth = baseDate.endOf('month').toDate();
+      .month((query.month ?? dayjs().month() + 1) - 1)
+      .date(query.day ?? 1);
+    const startOfPeriod = query.day
+      ? baseDate.startOf('day').toDate()
+      : baseDate.startOf('month').toDate();
+    const endOfPeriod = query.day
+      ? baseDate.endOf('day').toDate()
+      : baseDate.endOf('month').toDate();
     const today = new Date();
 
     const [
@@ -29,8 +34,8 @@ export class DashboardService {
         where: {
           userId,
           transactionDate: {
-            gte: startOfMonth,
-            lte: endOfMonth,
+            gte: startOfPeriod,
+            lte: endOfPeriod,
           },
         },
       }),
@@ -78,7 +83,7 @@ export class DashboardService {
         where: {
           userId,
           type: TransactionType.EXPENSE,
-          transactionDate: { gte: startOfMonth, lte: endOfMonth },
+          transactionDate: { gte: startOfPeriod, lte: endOfPeriod },
           categoryId: { not: null },
         },
         _sum: { amount: true },
@@ -88,7 +93,7 @@ export class DashboardService {
         where: {
           userId,
           type: TransactionType.EXPENSE,
-          transactionDate: { gte: startOfMonth, lte: endOfMonth },
+          transactionDate: { gte: startOfPeriod, lte: endOfPeriod },
           costCenterId: { not: null },
         },
         _sum: { amount: true },
@@ -97,7 +102,7 @@ export class DashboardService {
         where: {
           userId,
           transactionDate: {
-            gte: dayjs(startOfMonth).subtract(11, 'month').toDate(),
+            gte: dayjs(startOfPeriod).subtract(11, 'month').toDate(),
           },
         },
         select: {

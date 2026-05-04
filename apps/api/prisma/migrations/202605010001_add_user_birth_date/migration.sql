@@ -1,0 +1,7 @@
+ALTER TABLE "User" ADD COLUMN "birthDate" TIMESTAMP(3);
+
+UPDATE "User"
+SET "birthDate" = TIMESTAMP '1990-01-01 00:00:00'
+WHERE "birthDate" IS NULL;
+
+ALTER TABLE "User" ALTER COLUMN "birthDate" SET NOT NULL;

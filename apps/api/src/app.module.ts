@@ -8,6 +8,7 @@ import { CategoriesModule } from './categories/categories.module';
 import { validateEnv } from './config/env.validation';
 import { CostCentersModule } from './cost-centers/cost-centers.module';
 import { DashboardModule } from './dashboard/dashboard.module';
+import { EmailModule } from './email/email.module';
 import { FinancialGridModule } from './financial-grid/financial-grid.module';
 import { HealthModule } from './health/health.module';
 import { ImportsModule } from './imports/imports.module';
@@ -30,6 +31,7 @@ import { UsersModule } from './users/users.module';
     AccountsModule,
     CategoriesModule,
     CostCentersModule,
+    EmailModule,
     TransactionsModule,
     InstallmentsModule,
     RecurringTransactionsModule,
